@@ -25,7 +25,13 @@
 
 # End of https://www.toptal.com/developers/gitignore/api/go
 
-##
+
+
+## macOS
+.DS_Store
+
+
+## Repo specific
 dokku-gen.yml
 dokku-setup-*.sh
 dokcli

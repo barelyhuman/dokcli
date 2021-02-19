@@ -26,6 +26,11 @@ There's always predefined steps for various apps and hence I'd like to have a cl
 - Cli for creation and deletion of app
 - Lightweight Web-UI for the same
 
+**Example of a generated script**
+
+![script.png](/.github/assets/script.png)
+
+
 ## Dev
 
 Make sure you have a minimum of `go 1.5`
