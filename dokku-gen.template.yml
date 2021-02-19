@@ -6,7 +6,7 @@ plugins:
 app:
   # name for the app to be created
   name: "sid" 
-  # db plugin to use, make sure it exits on top
+  # db plugin to use, make sure it exits in the plugins above
   db: "mongo"
   # db name to use
   dbName: "sid-db"
