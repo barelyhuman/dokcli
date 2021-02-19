@@ -1,5 +1,8 @@
 # dokcli
 
+[![Binary Builds](https://github.com/barelyhuman/dokcli/actions/workflows/create-binaries.yml/badge.svg)](https://github.com/barelyhuman/dokcli/actions/workflows/create-binaries.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/barelyhuman/dokcli)](https://goreportcard.com/report/github.com/barelyhuman/dokcli)
+
 ## Motivation
 
 I use [dokku](https://github.com/dokku/dokku) a for most deployments and while their cli is pretty extensive a certain set of operations could be better in terms of creating an App.
