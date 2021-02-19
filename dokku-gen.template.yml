@@ -1,0 +1,14 @@
+plugins:
+  mongo: https://github.com/dokku/dokku-mongo.git
+  postgres: https://github.com/dokku/dokku-postgres.git
+  letsencrypt: https://github.com/dokku/dokku-letsencrypt.git
+
+app:
+  # name for the app to be created
+  name: "sid" 
+  # db plugin to use, make sure it exits on top
+  db: "mongo"
+  # db name to use
+  dbName: "sid-db"
+  # domain name 
+  domain: "https://demo.reaper.im"

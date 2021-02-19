@@ -1,44 +1,28 @@
-// SPDX-License-Identifier: MIT
-
 package main
 
 import (
-	"flag"
-	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
 )
 
-type TNewApp struct {
-	name     string
-	database string
-}
-
-type Command struct {
-}
-
-func (command *Command) Run() error {
-	return nil
-}
-
 func main() {
-	var newApp = flag.NewFlagSet("new", flag.ExitOnError)
-	var appName = newApp.String("name", "", "Name of the new app")
+	log.Println("Reading Config")
 
-	if len(os.Args) < 2 {
-		fmt.Println("expected one of the subcommands")
-		os.Exit(1)
+	config, err := readConfig()
+	if err != nil {
+		log.Fatal("Error reading config...\n", err)
 	}
 
-	command := deletgateToCommand()
+	log.Println("Generating Script")
+	script := config.GenerateScript()
 
-	err := command.Run()
+	scriptFilePath := "./dokku-setup-" + config.App.Name + ".sh"
 
-	if err.err != nil {
-		log.Fatal(err.message, err.err)
+	err = ioutil.WriteFile(scriptFilePath, []byte(script), 0644)
+	if err != nil {
+		log.Fatal(err)
 	}
-}
 
-func deletgateToCommand() Command {
-	// Decide which command to deletgate the operation to
+	log.Printf("Generated:%s", scriptFilePath)
+
 }
