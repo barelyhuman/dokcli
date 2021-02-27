@@ -12,10 +12,10 @@ There's always predefined steps for various apps and hence I'd like to have a cl
 ## Key Features (For now)
 
 - [ ] Create a New App
-  - [ ] Enter app name
-  - [ ] Select database plugin
-  - [ ] link database to app
-  - [ ] Add domain to the app
+  - [x] Enter app name
+  - [x] Select database plugin
+  - [x] link database to app
+  - [x] Add domain to the app
   - [ ] Add Let's encrypt
 - [ ] Delete App
   - [ ] Unlink all the above
@@ -31,7 +31,7 @@ There's always predefined steps for various apps and hence I'd like to have a cl
 Download the binary from releases from the browser or using curl
 
 ```bash
-# For linux
+# For linux / unix, make sure wget is installed
 curl -s https://api.github.com/repos/barelyhuman/dokcli/releases/latest | grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4 | wget -qi -
 tar -xvzf dokcli-linux-amd64.tar.gz
 ```
@@ -45,11 +45,17 @@ export PATH=$PATH:/usr/local/bin
 
 ## Usage
 
-For now the cli just creates a script for you to setup dokku as needed.
+**Note: Make sure you have dokku installed**
 
-1. Create a yml file named `dokku-gen.yml`. You can use the template provide [dokku-gen.template.yml](dokku-gen.template.yml)
-2. Run `dokcli` in the needed folder
-3. A script with the config's app name will be generated for you (screenshot below)
+For now the cli just creates a script for you to setup a dokku as needed.
+
+(optional step), the cli will ask you the needed information.
+0. Create a yml file named `dokku-gen.yml`. You can use the template provide [dokku-gen.template.yml](dokku-gen.template.yml)
+
+1. Run `dokcli` on the system to create the app on.
+2. A script with the app name will be generated for you (screenshot below) with the name of `dokku-setup-<app-name>.sh`
+3. `chmod +x ./dokku-setup-<app-name>.sh`
+4. `./dokku-setup-<app-name>.sh` to run the generated script.
 
 **Example of a generated script**
 
