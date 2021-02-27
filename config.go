@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/AlecAivazis/survey/v2"
+	"gopkg.in/yaml.v2"
 )
 
 // AppConfig the base app config for creating the dokku script
@@ -26,6 +28,42 @@ const (
 	pluginInstall = "sudo " + dokku + " plugin:install"
 	domainAdd     = dokku + " domains:add"
 )
+
+var supportedDatabases = map[string]string{
+	"mongo":    "https://github.com/dokku/dokku-mongo.git",
+	"postgres": "https://github.com/dokku/dokku-postgres.git",
+}
+
+var configQuestions = []*survey.Question{
+	{
+		Name:      "name",
+		Prompt:    &survey.Input{Message: "Name of the app?"},
+		Validate:  survey.Required,
+		Transform: survey.Title,
+	},
+	{
+		Name:      "dbName",
+		Prompt:    &survey.Input{Message: "Name of the database?"},
+		Validate:  survey.Required,
+		Transform: survey.Title,
+	},
+	{
+		Name: "db",
+		Prompt: &survey.Select{
+			Message: "Select a db plugin:",
+			Options: []string{"Mongo", "Postgres"},
+			Default: "Postgres",
+		},
+	},
+	{
+		Name:   "domain",
+		Prompt: &survey.Input{Message: "What domain do you want this app to have?"},
+	},
+}
+
+var addMorePrompt = &survey.Confirm{
+	Message: "Add more ?",
+}
 
 func (config *AppConfig) createApp() string {
 	return dokku + " apps" + createCmd + " " + config.App.Name + "\n"
@@ -67,19 +105,54 @@ func (config *AppConfig) GenerateScript() string {
 
 func readConfig() (AppConfig, error) {
 	config := AppConfig{}
+	fromFile := true
 	log.Println("Looking for `dokku-gen.yml`")
 	data, err := ioutil.ReadFile("./dokku-gen.yml")
 	if err != nil {
-		return config, err
+		if strings.Contains(err.Error(), "no such file or directory") {
+			fromFile = false
+			askConfigQuestions(&config)
+		}
 	}
 
-	log.Println("Decoding Config")
-	err = yaml.Unmarshal([]byte(data), &config)
-	if err != nil {
-		return config, err
+	if fromFile {
+		log.Println("Decoding Config")
+		err = yaml.Unmarshal([]byte(data), &config)
+		if err != nil {
+			return config, err
+		}
 	}
 
 	return config, nil
 }
 
-// Read and use config parameters from an ini config reader
+func askConfigQuestions(config *AppConfig) error {
+	answers := struct {
+		Name   string
+		DB     string `survey:"db"`
+		DBName string `survey:"dbName"`
+		Domain string
+	}{}
+
+	err := survey.Ask(configQuestions, &answers)
+
+	config.App.Name = answers.Name
+	config.App.DBName = answers.DBName
+	config.App.Domain = answers.Domain
+
+	pluginNameLower := strings.ToLower(answers.DB)
+
+	config.App.DB = pluginNameLower
+	pluginsMap := make(map[string]string)
+
+	pluginsMap[pluginNameLower] = supportedDatabases[pluginNameLower]
+
+	config.Plugins = pluginsMap
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+
+	return nil
+}
