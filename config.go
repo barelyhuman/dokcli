@@ -36,16 +36,14 @@ var supportedDatabases = map[string]string{
 
 var configQuestions = []*survey.Question{
 	{
-		Name:      "name",
-		Prompt:    &survey.Input{Message: "Name of the app?"},
-		Validate:  survey.Required,
-		Transform: survey.Title,
+		Name:     "name",
+		Prompt:   &survey.Input{Message: "Name of the app?"},
+		Validate: survey.Required,
 	},
 	{
-		Name:      "dbName",
-		Prompt:    &survey.Input{Message: "Name of the database?"},
-		Validate:  survey.Required,
-		Transform: survey.Title,
+		Name:     "dbName",
+		Prompt:   &survey.Input{Message: "Name of the database?"},
+		Validate: survey.Required,
 	},
 	{
 		Name: "db",
