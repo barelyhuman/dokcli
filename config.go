@@ -30,7 +30,7 @@ const (
 	linkCmd           = ":link"
 	pluginInstall     = "sudo " + dokku + " plugin:install"
 	domainAdd         = dokku + " domains:add"
-	configAdd         = dokku + " configs:set"
+	configAdd         = dokku + " config:set"
 	letsencryptEnable = dokku + " letsencrypt:enable"
 )
 
