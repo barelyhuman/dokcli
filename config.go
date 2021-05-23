@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -14,24 +15,29 @@ import (
 type AppConfig struct {
 	Plugins map[string]string
 	App     struct {
-		Name   string
-		DB     string
-		DBName string `yaml:"dbName"`
-		Domain string
+		Name             string
+		DB               string
+		DBName           string `yaml:"dbName"`
+		Domain           string
+		HTTPS            bool
+		LetsEncryptEmail string `yaml:"letsEncryptEmail"`
 	}
 }
 
 const (
-	dokku         = "dokku"
-	createCmd     = ":create"
-	linkCmd       = ":link"
-	pluginInstall = "sudo " + dokku + " plugin:install"
-	domainAdd     = dokku + " domains:add"
+	dokku             = "dokku"
+	createCmd         = ":create"
+	linkCmd           = ":link"
+	pluginInstall     = "sudo " + dokku + " plugin:install"
+	domainAdd         = dokku + " domains:add"
+	configAdd         = dokku + " configs:set"
+	letsencryptEnable = dokku + " letsencrypt:enable"
 )
 
-var supportedDatabases = map[string]string{
-	"mongo":    "https://github.com/dokku/dokku-mongo.git",
-	"postgres": "https://github.com/dokku/dokku-postgres.git",
+var pluginURLs = map[string]string{
+	"mongo":       "https://github.com/dokku/dokku-mongo.git",
+	"postgres":    "https://github.com/dokku/dokku-postgres.git",
+	"letsencrypt": "https://github.com/dokku/dokku-letsencrypt.git",
 }
 
 var configQuestions = []*survey.Question{
@@ -57,18 +63,42 @@ var configQuestions = []*survey.Question{
 		Name:   "domain",
 		Prompt: &survey.Input{Message: "What domain do you want this app to have?"},
 	},
+	{
+		Name:   "https",
+		Prompt: &survey.Confirm{Message: "You want to enable HTTPS (add LetsEncrypt)?"},
+	},
 }
 
-var addMorePrompt = &survey.Confirm{
-	Message: "Add more ?",
+var letsEncryptEmailQuestion = &survey.Input{
+	Message: "What email do you want to use with LetsEncrypt?",
 }
+
+// {
+// 	Name:   "letsEncryptEmail",
+// 	Prompt: &survey.Input{Message: "What email do you want to use with LetsEncrypt?"},
+// }
 
 func (config *AppConfig) createApp() string {
 	return dokku + " apps" + createCmd + " " + config.App.Name + "\n"
 }
 
 func (config *AppConfig) addDomain() string {
-	return domainAdd + " " + config.App.Name + " " + config.App.Domain + "\n"
+	domain := stripProtocol(config.App.Domain)
+	return domainAdd + " " + config.App.Name + " " + domain + "\n"
+}
+
+func (config *AppConfig) addLetsEncrypt() string {
+
+	var sb strings.Builder
+
+	if config.App.HTTPS && config.App.LetsEncryptEmail == "" {
+		log.Fatal("`letsEncryptEmail:` is needed if you set http as true")
+	}
+
+	sb.Write([]byte(configAdd + " --no-restart " + config.App.Name + " DOKKU_LETSENCRYPT_EMAIL=" + config.App.LetsEncryptEmail + "\n"))
+	sb.Write([]byte(letsencryptEnable + " " + config.App.Name))
+
+	return sb.String()
 }
 
 func (config *AppConfig) installPlugins() string {
@@ -97,7 +127,15 @@ func (config *AppConfig) GenerateScript() string {
 	sb.Write([]byte(config.createApp()))
 	sb.Write([]byte(config.createDatabase()))
 	sb.Write([]byte(config.linkDatabase()))
+	return sb.String()
+}
+
+func (config *AppConfig) GenerateDomainScript() string {
+	var sb strings.Builder
 	sb.Write([]byte(config.addDomain()))
+	if config.App.HTTPS {
+		sb.Write([]byte(config.addLetsEncrypt()))
+	}
 	return sb.String()
 }
 
@@ -126,31 +164,59 @@ func readConfig() (AppConfig, error) {
 
 func askConfigQuestions(config *AppConfig) error {
 	answers := struct {
-		Name   string
-		DB     string `survey:"db"`
-		DBName string `survey:"dbName"`
-		Domain string
+		Name             string
+		DB               string `survey:"db"`
+		DBName           string `survey:"dbName"`
+		Domain           string
+		HTTPS            bool
+		LetsEncryptEmail string `survey:"letsEncryptEmail"`
 	}{}
 
 	err := survey.Ask(configQuestions, &answers)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
 
 	config.App.Name = answers.Name
 	config.App.DBName = answers.DBName
 	config.App.Domain = answers.Domain
+	config.App.HTTPS = answers.HTTPS
+
+	if answers.HTTPS {
+		err = survey.AskOne(letsEncryptEmailQuestion, &answers.LetsEncryptEmail)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+		config.App.LetsEncryptEmail = answers.LetsEncryptEmail
+	}
 
 	pluginNameLower := strings.ToLower(answers.DB)
 
 	config.App.DB = pluginNameLower
 	pluginsMap := make(map[string]string)
 
-	pluginsMap[pluginNameLower] = supportedDatabases[pluginNameLower]
+	pluginsMap[pluginNameLower] = pluginURLs[pluginNameLower]
+
+	if answers.HTTPS {
+		pluginsMap["letsencrypt"] = pluginURLs["letsencrypt"]
+	}
 
 	config.Plugins = pluginsMap
 
+	return nil
+}
+
+func stripProtocol(domain string) string {
+	parsedURL, err := url.Parse(domain)
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		log.Fatal(err)
 	}
 
-	return nil
+	if parsedURL.Scheme == "" {
+		return stripProtocol("https://" + domain)
+	}
+
+	return parsedURL.Host
 }

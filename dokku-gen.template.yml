@@ -5,10 +5,13 @@ plugins:
 
 app:
   # name for the app to be created
-  name: "sid" 
+  name: "demo"
   # db plugin to use, make sure it exits in the plugins above
   db: "mongo"
   # db name to use
-  dbName: "sid-db"
-  # domain name 
-  domain: "https://demo.reaper.im"
+  dbName: "demo-db"
+  # domain name
+  domain: "demo.reaper.im"
+  # if you want to run letsencrypt
+  https: true
+  letsEncryptEmail: "demo@demo.com"
