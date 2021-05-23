@@ -11,12 +11,12 @@ There's always predefined steps for various apps and hence I'd like to have a cl
 
 ## Key Features (For now)
 
-- [ ] Create a New App
+- [x] Create a New App
   - [x] Enter app name
   - [x] Select database plugin
   - [x] link database to app
   - [x] Add domain to the app
-  - [ ] Add Let's encrypt
+  - [x] Add Let's encrypt
 - [ ] Delete App
   - [ ] Unlink all the above
   - [ ] clean up un-used images
@@ -49,8 +49,9 @@ export PATH=$PATH:/usr/local/bin
 
 For now the cli just creates a script for you to setup a dokku as needed.
 
-(optional step), the cli will ask you the needed information.
-0. Create a yml file named `dokku-gen.yml`. You can use the template provide [dokku-gen.template.yml](dokku-gen.template.yml)
+(**Step 0 is optional**), the cli will ask you the needed information.
+
+0. Create a yml file named `dokku-gen.yml`. You can use the provided template  [dokku-gen.template.yml](dokku-gen.template.yml)
 
 1. Run `dokcli` on the system to create the app on.
 2. A script with the app name will be generated for you (screenshot below) with the name of `dokku-setup-<app-name>.sh`
@@ -67,7 +68,7 @@ Make sure you have a minimum of `go 1.5`
 _Run_
 
 ```bash
-    go run .
+go run .
 ```
 
 _Build_
